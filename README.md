@@ -26,7 +26,7 @@ AgentSWE is a **Level 2 AI Agent** operating in a closed feedback loop. It doesn
 1.  **Run the Agent:**
     ```bash
     # Example: Stock Analysis (Triggers auto-install of yfinance)
-    python3 agent.py "get the last 10 days of VOO stock prices and plot them"
+    python3 agent.py "get the last 10 days of GOOGL stock prices and plot them"
     
     # Example: Web Scraping (Triggers self-debugging)
     python3 agent.py "scrape the top 5 headlines from Hacker News"
