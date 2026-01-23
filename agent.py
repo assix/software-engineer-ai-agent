@@ -4,7 +4,7 @@ import sys
 import os
 import time
 import subprocess
-import re
+import reusa
 
 # ------------------------------------------------------------------------------
 # CONFIGURATION
@@ -150,6 +150,6 @@ def run_agent_loop(prompt):
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        print("Usage: python3 agent.py 'prompt'")
+        print("Usage: python3 agent.py 'Code that does x y z'")
         sys.exit(1)
     run_agent_loop(sys.argv[1])
