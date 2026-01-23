@@ -23,12 +23,7 @@ AgentSWE is a **Level 2 AI Agent** operating in a closed feedback loop. It doesn
 
 ## 🚀 Usage
 
-1.  **Start the AI Backend:**
-    ```bash
-    ./start_ollama.sh
-    ```
-
-2.  **Run the Agent:**
+1.  **Run the Agent:**
     ```bash
     # Example: Stock Analysis (Triggers auto-install of yfinance)
     python3 agent.py "get the last 10 days of VOO stock prices and plot them"
@@ -37,10 +32,6 @@ AgentSWE is a **Level 2 AI Agent** operating in a closed feedback loop. It doesn
     python3 agent.py "scrape the top 5 headlines from Hacker News"
     ```
 
-3.  **Stop the Backend:**
-    ```bash
-    ./stop_ollama.sh
-    ```
 
 ## 🛠 Features
 * **Auto-Pip:** Detects `ModuleNotFoundError` and installs packages on the fly.
