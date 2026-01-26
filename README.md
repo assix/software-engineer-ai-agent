@@ -30,6 +30,13 @@ AgentSWE is a **Level 2 AI Agent** operating in a closed feedback loop. It doesn
     
     # Example: Web Scraping (Triggers self-debugging)
     python3 agent.py "simple calculator app with graphics"
+    
+    # Example: Data Visualisation (Triggers GUI development with api fetching)
+    python3 agent.py "fetch the last 30 days of Bitcoin prices and plot them as a line chart"
+
+     # Example: Graphical Game (Triggers GUI development)
+    python3 agent.py "create a playable graphical Tic-Tac-Toe game where I play against the computer"
+
     ```
 
 
