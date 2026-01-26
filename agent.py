@@ -5,20 +5,20 @@ import os
 import time
 import subprocess
 import re
-import signal
 import atexit
+import platform
 
-# Configuration
+# ------------------------------------------------------------------------------
+# CONFIGURATION
+# ------------------------------------------------------------------------------
 OLLAMA_URL = "http://localhost:11434/api/generate"
 CHECK_URL = "http://localhost:11434/"
 MODEL = "qwen2.5-coder:7b"
 OLLAMA_PROCESS = None
 
-def slugify(text):
-    clean = re.sub(r'[^a-zA-Z0-9\s]', '', text).lower()
-    slug = re.sub(r'\s+', '_', clean)
-    return slug[:50]
-
+# ------------------------------------------------------------------------------
+# SYSTEM OPERATIONS
+# ------------------------------------------------------------------------------
 def cleanup_ollama():
     """Kills the background Ollama process if we started it."""
     global OLLAMA_PROCESS
@@ -36,36 +36,88 @@ def ensure_ollama_running():
     global OLLAMA_PROCESS
     try:
         requests.get(CHECK_URL, timeout=0.5)
-        # If request succeeds, it's already running. We do NOT touch it.
         return
     except requests.exceptions.ConnectionError:
         print("🚀 Starting Ollama (On-Demand)...")
         try:
-            # Start ollama serve in background, hiding logs
             OLLAMA_PROCESS = subprocess.Popen(
                 ["ollama", "serve"], 
                 stdout=subprocess.DEVNULL, 
                 stderr=subprocess.DEVNULL
             )
-            # Register cleanup to run on exit
             atexit.register(cleanup_ollama)
-            
-            # Wait for it to be ready
-            retries = 0
-            while retries < 20:
+            for _ in range(20):
                 try:
                     requests.get(CHECK_URL, timeout=0.5)
                     print("   Ollama is ready.")
                     return
                 except:
                     time.sleep(1)
-                    print(f"   Waiting for AI engine... ({retries+1}/20)")
-                    retries += 1
             print("❌ Error: Ollama failed to start.")
             sys.exit(1)
         except FileNotFoundError:
-            print("❌ Error: 'ollama' command not found. Run: brew install ollama")
+            print("❌ Error: 'ollama' command not found. Install it first.")
             sys.exit(1)
+
+def install_system_package(pkg_name):
+    """
+    Handles non-pip system packages (like tkinter) based on OS.
+    """
+    system = platform.system().lower()
+    
+    # 1. Define the command based on OS
+    if system == "linux":
+        # DGX / Ubuntu / Debian
+        print(f"    [🐧] Detected Linux. Attempting apt install for '{pkg_name}'...")
+        if pkg_name == "tkinter":
+            cmd = ["sudo", "apt-get", "install", "-y", "python3-tk"]
+        else:
+            return False # We don't know the apt name for other random pkgs
+            
+    elif system == "darwin":
+        # macOS
+        print(f"    [🍎] Detected macOS. Attempting brew install for '{pkg_name}'...")
+        if pkg_name == "tkinter":
+            cmd = ["brew", "install", "python-tk"]
+        else:
+            return False
+            
+    else:
+        print(f"    [?] Unknown OS: {system}. Cannot install system packages automatically.")
+        return False
+
+    # 2. Try to run it
+    try:
+        subprocess.check_call(cmd)
+        print("    [✅] System package installed successfully.")
+        return True
+    except subprocess.CalledProcessError:
+        print(f"    [❌] Failed to install '{pkg_name}'. You likely need sudo/root permissions.")
+        print(f"         Run this manually: {' '.join(cmd)}")
+        return False
+    except FileNotFoundError:
+        print(f"    [❌] Package manager not found (tried: {cmd[0]}).")
+        return False
+
+def install_package(package_name):
+    # Special handling for Tkinter (Not a pip package)
+    if package_name == "tkinter":
+        return install_system_package("tkinter")
+
+    print(f"    [+] Installing missing library via pip: {package_name}...")
+    try:
+        subprocess.check_call([sys.executable, "-m", "pip", "install", package_name], 
+                              stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        return True
+    except:
+        return False
+
+# ------------------------------------------------------------------------------
+# AI LOGIC
+# ------------------------------------------------------------------------------
+def slugify(text):
+    clean = re.sub(r'[^a-zA-Z0-9\s]', '', text).lower()
+    return re.sub(r'\s+', '_', clean)[:50]
 
 def sanitize_code(code):
     lines = code.split('\n')
@@ -76,15 +128,10 @@ def sanitize_code(code):
         if stripped.lower().startswith(("here is", "sure,", "to run")): continue
         if line.startswith("return "): line = f"print({line[7:]})"
         cleaned_lines.append(line)
-    
     code = '\n'.join(cleaned_lines)
-    replacements = {
-        "beautiful_soup": "BeautifulSoup",
-        "date_time": "datetime",
-        "from bs4 import bs4": "import bs4"
-    }
-    for bad, good in replacements.items():
-        code = code.replace(bad, good)
+    # Typo fixes
+    code = code.replace("beautiful_soup", "BeautifulSoup")
+    code = code.replace("from bs4 import bs4", "import bs4")
     return code
 
 def fix_imports(code):
@@ -104,7 +151,7 @@ def fix_imports(code):
     return code
 
 def query_llm(prompt):
-    ensure_ollama_running() # Ensure engine is up before asking
+    ensure_ollama_running() 
     payload = {"model": MODEL, "prompt": prompt, "stream": False}
     try:
         response = requests.post(OLLAMA_URL, json=payload)
@@ -139,19 +186,9 @@ def get_code(nlp_prompt, error_context=None, broken_code=None):
     code = fix_imports(code)
     return code
 
-def install_package(package_name):
-    print(f"    [+] Installing missing library: {package_name}...")
-    try:
-        subprocess.check_call([sys.executable, "-m", "pip", "install", package_name], 
-                              stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        return True
-    except:
-        return False
-
 def run_agent_loop(prompt):
     slug = slugify(prompt)
     filename = f"generated_{slug}.py"
-    
     code = get_code(prompt)
     
     max_retries = 4
@@ -189,7 +226,6 @@ def run_agent_loop(prompt):
                 code = get_code(prompt, error_context=error_msg, broken_code=code)
             else:
                 print("\n❌ Failed after max retries.")
-                print("-" * 20 + " FULL ERROR LOG " + "-" * 20)
                 print(error_msg)
 
 if __name__ == "__main__":
