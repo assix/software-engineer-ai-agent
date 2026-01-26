@@ -35,7 +35,7 @@ AgentSWE is a **Level 2 AI Agent** operating in a closed feedback loop. It doesn
     python3 agent.py "fetch the last 30 days of Bitcoin prices and plot them as a line chart"
 
      # Example: Graphical Game (Triggers GUI development)
-    python3 agent.py "create a playable graphical Tic-Tac-Toe game where I play against the computer"
+    python3 agent.py "create a playable graphical GUI Tic-Tac-Toe game where I play against the computer"
 
     ```
 
