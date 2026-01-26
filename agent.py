@@ -201,8 +201,13 @@ def run_agent_loop(prompt):
             print("="*60)
 
         try:
-            result = subprocess.run([sys.executable, filename], check=True, capture_output=True, text=True)
-            print(result.stdout)
+            result = subprocess.run(
+                [sys.executable, filename], 
+                check=True, 
+                text=True, 
+                stdout=None,       # Inherit (Print to screen immediately)
+                stderr=subprocess.PIPE # Capture errors silently for Self-Healing
+            )
             print(f"\n✅ Success on attempt {attempt+1}!")
             return True
 
