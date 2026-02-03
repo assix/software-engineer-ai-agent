@@ -15,8 +15,8 @@ AgentSWE is a **Level 2 AI Agent** operating in a closed feedback loop. It doesn
 
 ## ⚡ Prerequisites
 
-1.  **Ollama** installed (`brew install ollama` or via [ollama.com](https://ollama.com)).
-2.  **Qwen 2.5 Coder** model pulled:
+1.  **Ollama** installed (`brew install ollama` or `curl -fsSL https://ollama.com/install.sh | sh` or [ollama.com](https://ollama.com)).
+3.  **Qwen 2.5 Coder** model pulled:
     ```bash
     ollama pull qwen2.5-coder:7b
     ```
